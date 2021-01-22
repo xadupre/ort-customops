@@ -1,5 +1,6 @@
 # coding: utf-8
 import unittest
+import sys
 import numpy as np
 from onnx import helper, onnx_pb as onnx_proto
 import onnxruntime as _ort
@@ -73,6 +74,10 @@ class TestMathOpString(unittest.TestCase):
         txout = sess.run(None, {'data': data, 'segment_ids': segment_ids})
         self.assertEqual(exp.shape, txout[0].shape)
         self.assertEqual(exp.tolist(), txout[0].tolist())
+
+        if sys.version_info[:2] == (3, 9):
+            # Works but ends up in a segment fault.
+            return
 
         try:
             from tensorflow.raw_ops import SegmentSum
