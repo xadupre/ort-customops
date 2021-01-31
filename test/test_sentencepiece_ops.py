@@ -12,7 +12,7 @@ from onnxruntime_customops import (
 import tensorflow as tf
 try:
     from tensorflow_text import SentencepieceTokenizer
-except ImportError:
+except Exception:
     SentencepieceTokenizer = None
 
 
