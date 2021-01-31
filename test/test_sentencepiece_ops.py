@@ -10,7 +10,10 @@ from onnxruntime_customops import (
     onnx_op, PyCustomOpDef,
     get_library_path as _get_library_path)
 import tensorflow as tf
-from tensorflow_text import SentencepieceTokenizer
+try:
+    from tensorflow_text import SentencepieceTokenizer
+except ImportError:
+    SentencepieceTokenizer = None
 
 
 def load_piece(name):
@@ -229,6 +232,7 @@ class TestPythonOpSentencePiece(unittest.TestCase):
 
         cls.RaggedTensorToSparse = ragged_tensor_to_sparse
 
+    @unittest.skipIf(SentencepieceTokenizer is None, reason="import failed")
     def test_string_ragged_string_to_sparse_python(self):
         so = _ort.SessionOptions()
         so.register_custom_ops_library(_get_library_path())
@@ -252,6 +256,7 @@ class TestPythonOpSentencePiece(unittest.TestCase):
         for i in range(0, 3):
             assert_almost_equal(exp[i], txout[i])
 
+    @unittest.skipIf(SentencepieceTokenizer is None, reason="import failed")
     def test_string_ragged_string_to_sparse_cc(self):
         so = _ort.SessionOptions()
         so.register_custom_ops_library(_get_library_path())
@@ -277,6 +282,7 @@ class TestPythonOpSentencePiece(unittest.TestCase):
         assert_almost_equal(exp[1], txout[1])
         assert_almost_equal(exp[2], txout[2])
 
+    @unittest.skipIf(SentencepieceTokenizer is None, reason="import failed")
     def test_string_sentencepiece_tokenizer(self):
         so = _ort.SessionOptions()
         so.register_custom_ops_library(_get_library_path())
@@ -313,6 +319,7 @@ class TestPythonOpSentencePiece(unittest.TestCase):
                             assert_almost_equal(exp[i], py_txout[i])
                             assert_almost_equal(exp[i], cc_txout[i])
 
+    @unittest.skipIf(SentencepieceTokenizer is None, reason="import failed")
     def test_string_sentencepiece_tokenizer_bin(self):
         so = _ort.SessionOptions()
         so.register_custom_ops_library(_get_library_path())
