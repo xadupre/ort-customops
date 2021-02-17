@@ -17,7 +17,7 @@
 #include <pybind11/functional.h>
 #include <pybind11/numpy.h>
 #include <thread>
-#include "utils.h"
+#include "utils/string_utils.h"
 #include "pykernel.h"
 #include "kernels/string_hash.hpp"
 #include "kernels/string_common.h"
@@ -426,6 +426,7 @@ void AddGlobalMethods(pybind11::module& m) {
   m.def("enable_custom_op", &EnablePyCustomOps, "Enable or disable pyop functions.");
   m.def("add_custom_op", [](const PyCustomOpDef& cod) { PyCustomOpDef::AddOp(&cod); });
   m.def("hash_64", &hash_64, "Computes a uint64 hash for a string (from tensorflow).");
+  m.def("default_opset_domain", []{return std::string(c_OpDomain);}, "return the default opset domain name");
 }
 
 void AddObjectMethods(pybind11::module& m) {

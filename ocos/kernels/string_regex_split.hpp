@@ -6,12 +6,16 @@
 #include "kernels.h"
 #include "utils/string_utils.h"
 
-struct KernelStringSplit : BaseKernel {
-  KernelStringSplit(OrtApi api);
+// See https://github.com/tensorflow/text/blob/master/docs/api_docs/python/text/regex_split_with_offsets.md.
+struct KernelStringRegexSplitWithOffsets : BaseKernel {
+  KernelStringRegexSplitWithOffsets(OrtApi api, const OrtKernelInfo* info);
   void Compute(OrtKernelContext* context);
+
+ protected:
+  int64_t global_SplitWithOffsets_;
 };
 
-struct CustomOpStringSplit : Ort::CustomOpBase<CustomOpStringSplit, KernelStringSplit> {
+struct CustomOpStringRegexSplitWithOffsets : Ort::CustomOpBase<CustomOpStringRegexSplitWithOffsets, KernelStringRegexSplitWithOffsets> {
   void* CreateKernel(OrtApi api, const OrtKernelInfo* info) const;
   const char* GetName() const;
   size_t GetInputTypeCount() const;

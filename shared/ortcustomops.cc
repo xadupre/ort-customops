@@ -8,58 +8,71 @@
 #include "kernels/op_ragged_tensor.hpp"
 #include "kernels/string_hash.hpp"
 #include "kernels/string_join.hpp"
+#include "kernels/string_lower.hpp"
 #include "kernels/string_regex_replace.hpp"
+#include "kernels/string_regex_split.hpp"
 #include "kernels/string_split.hpp"
 #include "kernels/string_upper.hpp"
 #include "kernels/negpos.hpp"
-#include "utils.h"
+#include "kernels/vector_to_string.hpp"
+#include "utils/string_utils.h"
 
 #ifdef ENABLE_SPM_TOKENIZER
 #include "sentencepiece_tokenizer.hpp"
 #endif
 
-CustomOpNegPos c_CustomOpNegPos;
-CustomOpSegmentSum c_CustomOpSegmentSum;
-CustomOpRaggedTensorToSparse c_CustomOpRaggedTensorToSparse;
 #ifdef ENABLE_SPM_TOKENIZER
 CustomOpSentencepieceTokenizer c_CustomOpSentencepieceTokenizer;
 #endif
+
+#ifdef ENABLE_TF_STRING
+CustomOpNegPos c_CustomOpNegPos;
+CustomOpSegmentSum c_CustomOpSegmentSum;
+CustomOpRaggedTensorToSparse c_CustomOpRaggedTensorToSparse;
 CustomOpStringEqual c_CustomOpStringEqual;
 CustomOpStringHash c_CustomOpStringHash;
 CustomOpStringHashFast c_CustomOpStringHashFast;
 CustomOpStringJoin c_CustomOpStringJoin;
+CustomOpStringLower c_CustomOpStringLower;
 CustomOpStringRegexReplace c_CustomOpStringRegexReplace;
+CustomOpStringRegexSplitWithOffsets c_CustomOpStringRegexSplitWithOffsets;
 CustomOpStringSplit c_CustomOpStringSplit;
 CustomOpStringUpper c_CustomOpStringUpper;
+CustomOpVectorToString c_CustomOpVectorToString;
+#endif
 
 OrtCustomOp* operator_lists[] = {
-    &c_CustomOpNegPos,
-    &c_CustomOpRaggedTensorToSparse,
-    &c_CustomOpSegmentSum,
 #ifdef ENABLE_SPM_TOKENIZER
     &c_CustomOpSentencepieceTokenizer,
 #endif
+
+#ifdef ENABLE_TF_STRING
+    &c_CustomOpNegPos,
+    &c_CustomOpRaggedTensorToSparse,
+    &c_CustomOpSegmentSum,
     &c_CustomOpStringEqual,
     &c_CustomOpStringHash,
     &c_CustomOpStringHashFast,
     &c_CustomOpStringJoin,
+    &c_CustomOpStringLower,
     &c_CustomOpStringRegexReplace,
+    &c_CustomOpStringRegexSplitWithOffsets,
     &c_CustomOpStringSplit,
     &c_CustomOpStringUpper,
+    &c_CustomOpVectorToString,
+#endif
     nullptr};
 
-
-class ExternalCustomOps
-{
+class ExternalCustomOps {
  public:
-  ExternalCustomOps(){
+  ExternalCustomOps() {
   }
 
   static ExternalCustomOps& instance() {
     static ExternalCustomOps g_instance;
     return g_instance;
   }
- 
+
   void Add(const OrtCustomOp* c_op) {
     op_array_.push_back(c_op);
   }
@@ -69,9 +82,9 @@ class ExternalCustomOps
       return nullptr;
     }
 
-    return op_array_[idx ++];
+    return op_array_[idx++];
   }
-  
+
   ExternalCustomOps(ExternalCustomOps const&) = delete;
   void operator=(ExternalCustomOps const&) = delete;
 
@@ -79,12 +92,10 @@ class ExternalCustomOps
   std::vector<const OrtCustomOp*> op_array_;
 };
 
-
 extern "C" bool AddExternalCustomOp(const OrtCustomOp* c_op) {
   ExternalCustomOps::instance().Add(c_op);
   return true;
 }
-
 
 extern "C" OrtStatus* ORT_API_CALL RegisterCustomOps(OrtSessionOptions* options, const OrtApiBase* api) {
   OrtCustomOpDomain* domain = nullptr;
@@ -132,10 +143,10 @@ extern "C" OrtStatus* ORT_API_CALL RegisterCustomOps(OrtSessionOptions* options,
 #endif
 
   size_t idx = 0;
-  const OrtCustomOp* e_ops =  ExternalCustomOps::instance().GetNextOp(idx);
+  const OrtCustomOp* e_ops = ExternalCustomOps::instance().GetNextOp(idx);
   while (e_ops != nullptr) {
     if (pyop_nameset.find(e_ops->GetName(e_ops)) == pyop_nameset.end()) {
-      if (auto status = ortApi->CustomOpDomain_Add(domain, e_ops)){
+      if (auto status = ortApi->CustomOpDomain_Add(domain, e_ops)) {
         return status;
       }
       e_ops = ExternalCustomOps::instance().GetNextOp(idx);
